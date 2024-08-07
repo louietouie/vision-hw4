@@ -16,17 +16,38 @@ void activate_matrix(matrix m, ACTIVATION a)
             double x = m.data[i][j];
             if(a == LOGISTIC){
                 // TODO
+                // sigmoid function. maps any value to [0,1]
+                // prone to vanishing gradient problem
+                m.data[i][j] = 1 / (1 + exp(-a));
             } else if (a == RELU){
                 // TODO
+                m.data[i][j] = max(0, a);
             } else if (a == LRELU){
                 // TODO
+                m.data[i][j] = max(0.02 * a, a);
             } else if (a == SOFTMAX){
                 // TODO
+                // often used in the final layer of neural networks
+                m.data[i][j] = exp(a);
             }
             sum += m.data[i][j];
         }
         if (a == SOFTMAX) {
             // TODO: have to normalize by sum if we are using SOFTMAX
+            // LOUIS: shouldn't this be one level lower? Why only the sum of each row?
+            // ANSWER: probably no. If this matrix m is following what most matrix structures use, every row represents a sample of data, and the columns are the logits for that sample of data.
+            // We only want to divide by the sum of the logits for that row.
+            // In this case it is an activation function, I think a row represents the outputs from a neural network layer (often final layer) for a single sample of data, and the columns are the nodes of the layer.
+            // this is useful if each node in the final layer is a prediction for a class in a multiclass problem (how is this done? error of each node is based on a different class?) Softmax will turn this final layer into probabilities
+            // https://stackoverflow.com/questions/66747564/softmax-function-of-2d-array
+            // https://www.singlestore.com/blog/a-guide-to-softmax-activation-function/
+            // tensorflow says don't use softmax as last layer because makes backpropegation hard
+            // https://ai.stackexchange.com/questions/20214/why-does-tensorflow-docs-discourage-using-softmax-as-activation-for-the-last-lay#:~:text=softmax%20in%20as%20the%20activation,when%20using%20a%20softmax%20output.
+            // https://xeonqq.github.io/machine%20learning/softmax/
+
+            for(j = 0; j < m.cols; ++j){
+                m.data[i][j] = m.data[i][j] / sum;
+            }
         }
     }
 }
