@@ -169,7 +169,7 @@ void update_layer(layer *l, double rate, double momentum, double decay)
     matrix new_weights =        axpy_matrix(rate, total_change, l->w);
 
     free_matrix(l->v); // I think this is throwing errors because l->v has already been freed when I freed l->dw (since they are pointing at the same thing?)
-    l->v = l->dw;
+    l->v = copy_matrix(l->dw);
 
     // free_matrix(l->w);
     l->w = new_weights;
@@ -177,7 +177,7 @@ void update_layer(layer *l, double rate, double momentum, double decay)
     // Remember to free any intermediate results to avoid memory leaks
     free_matrix(momentum_change);
     free_matrix(total_change);
-    free_matrix(new_weights);
+    // free_matrix(new_weights);
 }
 
 // Make a new layer for our model
