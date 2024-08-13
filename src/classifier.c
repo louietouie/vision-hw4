@@ -88,7 +88,7 @@ void gradient_matrix(matrix m, ACTIVATION a, matrix d)
 }
 // LOUIS NOTES ON ABOVE
 // At this point when this method is called, we will know the derivative of the loss function with respect to the output, say dL/dO
-// We want the gradient with respect to the nodes input, dL/dI, so we need to know the gradient of the activation function the node runs, dO/dL
+// We want the gradient with respect to the nodes input, dL/dI, so we need to know the gradient of the activation function the node runs, dO/dI
 // We are able to calculate the gradient of our activation function f(x), f'(x) without x, which is normally necessary (to plug into f'(x)).
 // Instead, we only need y. (I think this is because our activation functions are monotonic, AKA constantly increasing, so each y only maps to one possible dx)
 
@@ -100,15 +100,12 @@ void gradient_matrix(matrix m, ACTIVATION a, matrix d)
 // returns: matrix that is output of the layer
 matrix forward_layer(layer *l, matrix in)
 {
-
     l->in = in;  // Save the input for backpropagation
-
 
     // TODO: fix this! multiply input by weights and apply activation function.
     // matrix out = make_matrix(in.rows, l->w.cols); // placeholder
     matrix out = matrix_mult_matrix(l->in, l->w);
     activate_matrix(out, l->activation);
-
 
     free_matrix(l->out);// free the old output
     l->out = out;       // Save the current output for gradient calculation
@@ -124,7 +121,7 @@ matrix backward_layer(layer *l, matrix delta)
     // 1.4.1
     // delta is dL/dy
     // TODO: modify it in place to be dL/d(xw)
-    // delta is changed to loss w.r.t input of layer
+    // delta is changed to loss w.r.t input of layer by applying the gradient of the activation function
     gradient_matrix(l->out, l->activation, delta);
 
     // 1.4.2
@@ -134,14 +131,14 @@ matrix backward_layer(layer *l, matrix delta)
     matrix dw = matrix_mult_matrix(input_x_t, delta);
     free_matrix(l->dw); // LOUIS: IS THIS NECESSARY? CAN I JUST REASSIGN? HOMEWORK SAYS "Then calculate dL/dw and save it into l->dw (free the old one first to not leak memory!)"
     l->dw = dw;
-    free_matrix(input_x_t);
+    // free_matrix(input_x_t); // will this be freed automatically since initialized within the function
 
     // 1.4.3
     // TODO: finally, calculate dL/dx and return it.
     // matrix dx = make_matrix(l->in.rows, l->in.cols); // replace this
     matrix input_w_t = transpose_matrix(l->w);
     matrix dx = matrix_mult_matrix(delta, input_w_t);
-    free_matrix(input_w_t);
+    // free_matrix(input_w_t);
     return dx;
 }
 
