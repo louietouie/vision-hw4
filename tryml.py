@@ -10,6 +10,13 @@ def neural_net(inputs, outputs):
             make_layer(32, outputs, SOFTMAX)]
     return make_model(l)
 
+def neural_net_better(inputs, outputs):
+    print(inputs)
+    l = [   make_layer(inputs, 32, LRELU),
+            make_layer(32, outputs, SOFTMAX)]
+    return make_model(l)
+
+
 print("loading data...")
 train = load_classification_data("mnist.train", "mnist.labels", 1)
 test  = load_classification_data("mnist.test", "mnist.labels", 1)
@@ -18,12 +25,13 @@ print
 
 print("training model...")
 batch = 128
-iters = 1000
-rate = .01
+iters = 200
+rate = .1 # changed from .01, learns faster now.
 momentum = .9
 decay = .0
 
-m = softmax_model(train.X.cols, train.y.cols)
+# m = softmax_model(train.X.cols, train.y.cols)
+m = neural_net(train.X.cols, train.y.cols)
 train_model(m, train, batch, iters, rate, momentum, decay)
 print("done")
 print

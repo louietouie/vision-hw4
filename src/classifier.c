@@ -177,7 +177,7 @@ void update_layer(layer *l, double rate, double momentum, double decay)
     // Remember to free any intermediate results to avoid memory leaks
     free_matrix(momentum_change);
     free_matrix(total_change);
-    // free_matrix(new_weights);
+    // free_matrix(new_weights); // Dont want to free this, it will also free l->w
 }
 
 // Make a new layer for our model
