@@ -3,6 +3,10 @@
 #include "image.h"
 #include "test.h"
 #include "args.h"
+#include "classifier.h"
+
+#include <stdlib.h>
+#include <stdio.h>
 
 int main(int argc, char **argv)
 {
@@ -48,12 +52,14 @@ int main(int argc, char **argv)
     double rate = .01;
     double momentum = .9;
     double decay = .0;
-
-    layer *layers = calloc(1, sizeof(layer *));
+    
+    //image *result = calloc(2, sizeof(image));
+    layer *layers = calloc(1, sizeof(layer));
     layers[0] = make_layer(train.X.cols, train.y.cols, SOFTMAX);
+    // layers[1] = make_layer(train.X.cols, train.y.cols, SOFTMAX);
     model m;
     m.layers = layers;
-    m.n = 2;
+    m.n = 1;
 
     train_model(m, train, batch, iters, rate, momentum, decay);
 
