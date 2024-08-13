@@ -18,17 +18,17 @@ void activate_matrix(matrix m, ACTIVATION a)
                 // TODO
                 // sigmoid function. maps any value to [0,1]
                 // prone to vanishing gradient problem
-                m.data[i][j] = 1 / (1 + exp(-a));
+                m.data[i][j] = 1 / (1 + exp(-x));
             } else if (a == RELU){
                 // TODO
-                m.data[i][j] = (0 > a) ? 0 : a;
+                m.data[i][j] = (0 > x) ? 0 : x;
             } else if (a == LRELU){
                 // TODO
-                m.data[i][j] = (0 > a) ? 0.02*a : a;
+                m.data[i][j] = (0 > x) ? 0.02*x : x;
             } else if (a == SOFTMAX){
                 // TODO
                 // often used in the final layer of neural networks
-                m.data[i][j] = exp(a);
+                m.data[i][j] = exp(x);
             }
             sum += m.data[i][j];
         }
