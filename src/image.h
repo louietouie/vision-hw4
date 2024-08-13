@@ -43,6 +43,7 @@ typedef struct{
 
 // Basic operations
 float get_pixel(image im, int x, int y, int c);
+float get_pixel_low_strict(image im, int x, int y, int c);
 void set_pixel(image im, int x, int y, int c, float v);
 image copy_image(image im);
 image rgb_to_grayscale(image im);

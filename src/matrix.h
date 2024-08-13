@@ -31,4 +31,8 @@ matrix matrix_invert(matrix m);
 matrix random_matrix(int rows, int cols, double s);
 matrix transpose_matrix(matrix m);
 matrix axpy_matrix(double a, matrix x, matrix y);
+
+void scale_matrix(matrix m, double s);
+matrix matrix_sub_matrix(matrix a, matrix b);
+
 #endif

@@ -5,7 +5,7 @@ def softmax_model(inputs, outputs):
     return make_model(l)
 
 def neural_net(inputs, outputs):
-    print inputs
+    print(inputs)
     l = [   make_layer(inputs, 32, LOGISTIC),
             make_layer(32, outputs, SOFTMAX)]
     return make_model(l)

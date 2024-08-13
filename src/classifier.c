@@ -21,10 +21,10 @@ void activate_matrix(matrix m, ACTIVATION a)
                 m.data[i][j] = 1 / (1 + exp(-a));
             } else if (a == RELU){
                 // TODO
-                m.data[i][j] = max(0, a);
+                m.data[i][j] = (0 > a) ? 0 : a;
             } else if (a == LRELU){
                 // TODO
-                m.data[i][j] = max(0.02 * a, a);
+                m.data[i][j] = (0 > a) ? 0.02*a : a;
             } else if (a == SOFTMAX){
                 // TODO
                 // often used in the final layer of neural networks
@@ -131,17 +131,17 @@ matrix backward_layer(layer *l, matrix delta)
     // TODO: then calculate dL/dw and save it in l->dw
     // matrix dw = make_matrix(l->w.rows, l->w.cols); // replace this
     matrix input_x_t = transpose_matrix(l->in);
-    matrix dw = matrix_mult_matrix(delta, input_x_t);
-    free_matrix(l->dw);
+    matrix dw = matrix_mult_matrix(input_x_t, delta);
+    free_matrix(l->dw); // LOUIS: IS THIS NECESSARY? CAN I JUST REASSIGN? HOMEWORK SAYS "Then calculate dL/dw and save it into l->dw (free the old one first to not leak memory!)"
     l->dw = dw;
     free_matrix(input_x_t);
 
-    
     // 1.4.3
     // TODO: finally, calculate dL/dx and return it.
     // matrix dx = make_matrix(l->in.rows, l->in.cols); // replace this
     matrix input_w_t = transpose_matrix(l->w);
     matrix dx = matrix_mult_matrix(delta, input_w_t);
+    free_matrix(input_w_t);
     return dx;
 }
 
@@ -160,19 +160,23 @@ void update_layer(layer *l, double rate, double momentum, double decay)
     scale_matrix(l->dw, rate);
     scale_matrix(l->v, -momentum);
     scale_matrix(l->w, decay);
-    l->dw = matrix_sub_matrix(matrix_sub_matrix(l -> dw, l-> w), l->v);
+    // free_matrix(l -> dw);
+    // free_matrix(l -> w);
+    // free_matrix(l -> v);
+    
+    matrix weight_change_decay = matrix_sub_matrix(l -> dw, l-> w);
+    l->dw = matrix_sub_matrix(weight_change_decay, l->v);
+    free_matrix(weight_change_decay);
 
     // all 3 of these are k*n size, aka # nodes left layer by # nodes right layer
     // dw is weight updates
     // v is past weight updates
     // w is current weights
-
     // NEED TO DO dw + v - w
     l->v = l->dw;
 
     // Update l->w
     l->w = matrix_sub_matrix(l->w, l->dw);
-
     // Remember to free any intermediate results to avoid memory leaks
 
 }

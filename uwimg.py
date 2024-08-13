@@ -239,9 +239,12 @@ forward_model = lib.forward_model
 forward_model.argtypes = [MODEL, MATRIX]
 forward_model.restype = MATRIX
 
-load_classification_data = lib.load_classification_data
-load_classification_data.argtypes = [c_char_p, c_char_p, c_int]
-load_classification_data.restype = DATA
+load_classification_data_lib = lib.load_classification_data
+load_classification_data_lib.argtypes = [c_char_p, c_char_p, c_int]
+load_classification_data_lib.restype = DATA
+
+def load_classification_data(str1, str2, int1):
+    return load_classification_data_lib(str1.encode('ascii'), str2.encode('ascii'), int1)
 
 make_layer = lib.make_layer
 make_layer.argtypes = [c_int, c_int, c_int]
