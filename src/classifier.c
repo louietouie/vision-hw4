@@ -158,17 +158,20 @@ void update_layer(layer *l, double rate, double momentum, double decay)
     // Calculate Δw_t = dL/dw_t - λw_t + mΔw_{t-1}
     // save it to l->v
     scale_matrix(l->dw, rate);
-    scale_matrix(l->v, momentum);
+    scale_matrix(l->v, -momentum);
     scale_matrix(l->w, decay);
-    l->dw = scale_matrix(l->dw, rate) + scale_matrix(l->v, momentum) - scale_matrix(l->w, decay);
-    l -> dw = matrix_sub_matrix(l -> dw, l-> w)
+    l->dw = matrix_sub_matrix(matrix_sub_matrix(l -> dw, l-> w), l->v);
+
+    // all 3 of these are k*n size, aka # nodes left layer by # nodes right layer
+    // dw is weight updates
+    // v is past weight updates
+    // w is current weights
 
     // NEED TO DO dw + v - w
-
     l->v = l->dw;
 
     // Update l->w
-    l->w = l->w + l->dw;
+    l->w = matrix_sub_matrix(l->w, l->dw);
 
     // Remember to free any intermediate results to avoid memory leaks
 
