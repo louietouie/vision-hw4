@@ -157,7 +157,14 @@ void update_layer(layer *l, double rate, double momentum, double decay)
     // TODO:
     // Calculate Δw_t = dL/dw_t - λw_t + mΔw_{t-1}
     // save it to l->v
-    l->dw = (rate * l->dw) + (momentum * l->v) - (decay * l->w);
+    scale_matrix(l->dw, rate);
+    scale_matrix(l->v, momentum);
+    scale_matrix(l->w, decay);
+    l->dw = scale_matrix(l->dw, rate) + scale_matrix(l->v, momentum) - scale_matrix(l->w, decay);
+    l -> dw = matrix_sub_matrix(l -> dw, l-> w)
+
+    // NEED TO DO dw + v - w
+
     l->v = l->dw;
 
     // Update l->w
