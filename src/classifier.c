@@ -35,13 +35,14 @@ void activate_matrix(matrix m, ACTIVATION a)
         if (a == SOFTMAX) {
             // TODO: have to normalize by sum if we are using SOFTMAX
             // LOUIS: shouldn't this be one level lower? Why only the sum of each row?
-            // ANSWER: probably no. If this matrix m is following what most matrix structures use, every row represents a sample of data, and the columns are the logits for that sample of data.
+            // ANSWER: No. From homework description, "Each row in the matrix is a separate data point so we want to normalize over each data point separately."
+            // ANSWER Continued: No. If this matrix m is following what most matrix structures use, every row represents a sample of data, and the columns are the logits for that sample of data.
             // We only want to divide by the sum of the logits for that row.
             // In this case it is an activation function, I think a row represents the outputs from a neural network layer (often final layer) for a single sample of data, and the columns are the nodes of the layer.
             // this is useful if each node in the final layer is a prediction for a class in a multiclass problem (how is this done? error of each node is based on a different class?) Softmax will turn this final layer into probabilities
+            // NOTE: tensorflow says don't use softmax as last layer because makes backpropegation hard
             // https://stackoverflow.com/questions/66747564/softmax-function-of-2d-array
             // https://www.singlestore.com/blog/a-guide-to-softmax-activation-function/
-            // tensorflow says don't use softmax as last layer because makes backpropegation hard
             // https://ai.stackexchange.com/questions/20214/why-does-tensorflow-docs-discourage-using-softmax-as-activation-for-the-last-lay#:~:text=softmax%20in%20as%20the%20activation,when%20using%20a%20softmax%20output.
             // https://xeonqq.github.io/machine%20learning/softmax/
 
@@ -52,8 +53,7 @@ void activate_matrix(matrix m, ACTIVATION a)
     }
 }
 
-// Calculates the gradient of an activation function and multiplies it into
-// the delta for a layer
+// Calculates the gradient of an activation function and multiplies it into the delta for a layer
 // matrix m: an activated layer output
 // ACTIVATION a: activation function for a layer
 // matrix d: delta before activation gradient
@@ -64,9 +64,35 @@ void gradient_matrix(matrix m, ACTIVATION a, matrix d)
         for(j = 0; j < m.cols; ++j){
             double x = m.data[i][j];
             // TODO: multiply the correct element of d by the gradient
+
+            if(a == LOGISTIC){
+                // f'(x) = f(x) * (1 - f(x))
+                d.data[i][j] *= (x * (1 - x));
+            } else if (a == RELU){
+                // 1 or 0.
+                if (x < 0) {
+                    d.data[i][j] = 0;
+                }
+            } else if (a == LRELU){
+                // 1 or 0.02
+                if (x < 0) {
+                    d.data[i][j] *= 0.02;
+                }
+            } else if (a == SOFTMAX){
+                // 1
+                continue;
+            }
+
         }
     }
 }
+// LOUIS NOTES ON ABOVE
+// At this point when this method is called, we will know the derivative of the loss function with respect to the output, say dL/dO
+// We want the gradient with respect to the nodes input, dL/dI, so we need to know the gradient of the activation function the node runs, dO/dL
+// We are able to calculate the gradient of our activation function f(x), f'(x) without x, which is normally necessary (to plug into f'(x)).
+// Instead, we only need y. (I think this is because our activation functions are monotonic, AKA constantly increasing, so each y only maps to one possible dx)
+
+
 
 // Forward propagate information through a layer
 // layer *l: pointer to the layer
@@ -79,7 +105,9 @@ matrix forward_layer(layer *l, matrix in)
 
 
     // TODO: fix this! multiply input by weights and apply activation function.
-    matrix out = make_matrix(in.rows, l->w.cols);
+    // matrix out = make_matrix(in.rows, l->w.cols); // placeholder
+    matrix out = matrix_mult_matrix(l->in, l->w);
+    activate_matrix(out, l->activation);
 
 
     free_matrix(l->out);// free the old output
@@ -96,19 +124,24 @@ matrix backward_layer(layer *l, matrix delta)
     // 1.4.1
     // delta is dL/dy
     // TODO: modify it in place to be dL/d(xw)
-
+    // delta is changed to loss w.r.t input of layer
+    gradient_matrix(l->out, l->activation, delta);
 
     // 1.4.2
     // TODO: then calculate dL/dw and save it in l->dw
+    // matrix dw = make_matrix(l->w.rows, l->w.cols); // replace this
+    matrix input_x_t = transpose_matrix(l->in);
+    matrix dw = matrix_mult_matrix(delta, input_x_t);
     free_matrix(l->dw);
-    matrix dw = make_matrix(l->w.rows, l->w.cols); // replace this
     l->dw = dw;
+    free_matrix(input_x_t);
 
     
     // 1.4.3
     // TODO: finally, calculate dL/dx and return it.
-    matrix dx = make_matrix(l->in.rows, l->in.cols); // replace this
-
+    // matrix dx = make_matrix(l->in.rows, l->in.cols); // replace this
+    matrix input_w_t = transpose_matrix(l->w);
+    matrix dx = matrix_mult_matrix(delta, input_w_t);
     return dx;
 }
 
@@ -119,13 +152,16 @@ matrix backward_layer(layer *l, matrix delta)
 // double decay: value for weight decay
 void update_layer(layer *l, double rate, double momentum, double decay)
 {
+    // LOUIS NOTE: this beginner neural network does not have a bias term, only weights. Redmon says for the training we are doing, it isn't necessary.
+
     // TODO:
     // Calculate Δw_t = dL/dw_t - λw_t + mΔw_{t-1}
     // save it to l->v
-
+    l->dw = (rate * l->dw) + (momentum * l->v) - (decay * l->w);
+    l->v = l->dw;
 
     // Update l->w
-
+    l->w = l->w + l->dw;
 
     // Remember to free any intermediate results to avoid memory leaks
 
