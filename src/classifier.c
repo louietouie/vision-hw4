@@ -131,14 +131,20 @@ matrix backward_layer(layer *l, matrix delta)
     matrix dw = matrix_mult_matrix(input_x_t, delta);
     free_matrix(l->dw); // LOUIS: IS THIS NECESSARY? CAN I JUST REASSIGN? HOMEWORK SAYS "Then calculate dL/dw and save it into l->dw (free the old one first to not leak memory!)"
     l->dw = dw;
-    // free_matrix(input_x_t); // will this be freed automatically since initialized within the function
+
+    // NEW
+    free_matrix(input_x_t); // will this be freed automatically since initialized within the function
+    // free_matrix(dw); // LOUIS: In the debugger, this line DID affect l->dw (i think it freed it). This causes free_matrix(l->dw) do have an error on next time around since it was freed here.
 
     // 1.4.3
     // TODO: finally, calculate dL/dx and return it.
     // matrix dx = make_matrix(l->in.rows, l->in.cols); // replace this
     matrix input_w_t = transpose_matrix(l->w);
     matrix dx = matrix_mult_matrix(delta, input_w_t);
-    // free_matrix(input_w_t);
+
+    // NEW
+    free_matrix(input_w_t);
+
     return dx;
 }
 
@@ -153,29 +159,25 @@ void update_layer(layer *l, double rate, double momentum, double decay)
 
     // TODO:
     // Calculate Δw_t = dL/dw_t - λw_t + mΔw_{t-1}
-    // save it to l->v
-    scale_matrix(l->dw, rate);
-    scale_matrix(l->v, -momentum);
-    scale_matrix(l->w, decay);
-    // free_matrix(l -> dw);
-    // free_matrix(l -> w);
-    // free_matrix(l -> v);
-    
-    matrix weight_change_decay = matrix_sub_matrix(l -> dw, l-> w);
-    l->dw = matrix_sub_matrix(weight_change_decay, l->v);
-    free_matrix(weight_change_decay);
-
     // all 3 of these are k*n size, aka # nodes left layer by # nodes right layer
     // dw is weight updates
     // v is past weight updates
     // w is current weights
-    // NEED TO DO dw + v - w
+
+    matrix momentum_change =    axpy_matrix(momentum, l->v, l->dw);
+    matrix total_change =       axpy_matrix(-decay, l->w, momentum_change);
+    matrix new_weights =        axpy_matrix(rate, total_change, l->w);
+
+    free_matrix(l->v); // I think this is throwing errors because l->v has already been freed when I freed l->dw (since they are pointing at the same thing?)
     l->v = l->dw;
 
-    // Update l->w
-    l->w = matrix_sub_matrix(l->w, l->dw);
-    // Remember to free any intermediate results to avoid memory leaks
+    // free_matrix(l->w);
+    l->w = new_weights;
 
+    // Remember to free any intermediate results to avoid memory leaks
+    free_matrix(momentum_change);
+    free_matrix(total_change);
+    free_matrix(new_weights);
 }
 
 // Make a new layer for our model
